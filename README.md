@@ -1,4 +1,4 @@
-# Export DM conversations form Slack
+# Export DM conversations from Slack
 
 To do so, follow two steps:
 
