@@ -69,7 +69,7 @@ def auth(token):
         print(f'Something went wrong. Status code: {r.status_code}')
         return False
 
-def retrieve_data(endpoint, payload):
+def retrieve_data(endpoint, payload, token):
     try: 
         r = requests.post(f'https://slack.com/api/{endpoint}', data = payload)
         r.raise_for_status()
@@ -125,7 +125,7 @@ def fetch_conversations():
             }
         """
 
-def fetch_message_data(payload):
+def fetch_message_data(payload, token):
     r = data = None
     back = 0
 
@@ -192,7 +192,6 @@ if __name__ == "__main__":
 
         # Define the payload to do requests at Slack API
         PAYLOAD = {
-            'token': args.token,
         }
 
         # Create a directory where to store the data
@@ -202,11 +201,11 @@ if __name__ == "__main__":
         os.chdir(dir) 
 
         # Retrieve users and conversations lists
-        retrieve_data('users.list', PAYLOAD)  
+        retrieve_data('users.list', PAYLOAD, args.token)
         users = fetch_users()
 
         PAYLOAD['types'] = 'im'
-        retrieve_data('conversations.list', PAYLOAD)
+        retrieve_data('conversations.list', PAYLOAD, args.token)
 
         # Select chat to export
         title = 'Please the conversation to export: '
@@ -227,6 +226,7 @@ if __name__ == "__main__":
             # Export chat
             print('\nPreparing to export chat ...\n')
             fetch_message_data(PAYLOAD)
+
 
     else:
         # Auth fail
