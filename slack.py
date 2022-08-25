@@ -24,9 +24,11 @@ def auth(token):
         print(f'Something went wrong. Status code: {r.status_code}')
         return False
 
-def retrieve_data(endpoint, payload):
+def retrieve_data(endpoint, payload, token):
     try: 
-        r = requests.get(f'https://slack.com/api/{endpoint}', params = payload)
+        headers = {'Authorization': 'Bearer ' + token, 'Content-type': 'application/x-www-form-urlencoded'}
+        
+        r = requests.get(f'https://slack.com/api/{endpoint}', params = payload, headers = headers)
         r.raise_for_status()
         print(f'Data retrieved OK. Status code: {r.status_code}')
 
@@ -78,7 +80,7 @@ def fetch_conversations():
             }
         """
 
-def fetch_message_data(payload):
+def fetch_message_data(payload, token):
     r = data = None
     back = 0
 
@@ -90,7 +92,9 @@ def fetch_message_data(payload):
                 # change the 'latest' argument to fetch older messages
                 payload['latest'] = data['messages'][-1]['ts'] 
             
-            r = requests.get(f'https://slack.com/api/conversations.history', params = payload)
+            headers = {'Authorization': 'Bearer ' + token, 'Content-type': 'application/x-www-form-urlencoded'}
+            
+            r = requests.get(f'https://slack.com/api/conversations.history', params = payload, headers = headers)
             r.raise_for_status()
             print(f'Data retrieved OK. Status code: {r.status_code}')
 
@@ -127,7 +131,6 @@ if __name__ == "__main__":
 
         # Define the payload to do requests at Slack API
         PAYLOAD = {
-            'token': args.token,
         }
 
         # Create a directory where to store the data
@@ -138,11 +141,11 @@ if __name__ == "__main__":
         os.chdir(dir) 
 
         # Retrieve users and conversations lists
-        retrieve_data('users.list', PAYLOAD)  
+        retrieve_data('users.list', PAYLOAD, args.token)
         users = fetch_users()
 
         PAYLOAD['types'] = 'im'
-        retrieve_data('conversations.list', PAYLOAD)
+        retrieve_data('conversations.list', PAYLOAD, args.token)
 
         # Select chat to export
         title = 'Please the conversation to export: '
@@ -153,7 +156,7 @@ if __name__ == "__main__":
 
         # Export chat
         print('\nPreparing to export chat ...\n')
-        fetch_message_data(PAYLOAD)
+        fetch_message_data(PAYLOAD, args.token)
 
     else:
         # Auth fail
