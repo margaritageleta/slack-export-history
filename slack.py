@@ -71,7 +71,8 @@ def auth(token):
 
 def retrieve_data(endpoint, payload, token):
     try: 
-        r = requests.post(f'https://slack.com/api/{endpoint}', data = payload)
+        headers = {'Authorization': 'Bearer ' + token, 'Content-type': 'application/x-www-form-urlencoded'}
+        r = requests.post(f'https://slack.com/api/{endpoint}', data = payload, headers = headers)
         r.raise_for_status()
         print(f'Data retrieved OK. Status code: {r.status_code}')
         # print('!!!r.text=%s' % (r.text[:500]))
@@ -137,7 +138,8 @@ def fetch_message_data(payload, token):
                 # change the 'latest' argument to fetch older messages
                 payload['latest'] = data['messages'][-1]['ts'] 
             
-            r = requests.post(f'https://slack.com/api/conversations.history', data = payload)
+            headers = {'Authorization': 'Bearer ' + token, 'Content-type': 'application/x-www-form-urlencoded'}
+            r = requests.post(f'https://slack.com/api/conversations.history', data = payload, headers = headers)
             r.raise_for_status()
             print(f'Data retrieved OK. Status code: {r.status_code}')
             time.sleep(1)
@@ -217,7 +219,7 @@ if __name__ == "__main__":
                 print(f'\nPreparing to export chat {id} ({convers[id]["user_name"]})...\n')
                 time.sleep(1)
                 p['channel'] = id
-                fetch_message_data(p)
+                fetch_message_data(p, args.token)
                 time.sleep(1)
         else:
             option, index = pick([f"Chat {option} with {convers[option]['user_name']}" for option in options], title)
@@ -225,7 +227,7 @@ if __name__ == "__main__":
 
             # Export chat
             print('\nPreparing to export chat ...\n')
-            fetch_message_data(PAYLOAD)
+            fetch_message_data(PAYLOAD, args.token)
 
 
     else:
