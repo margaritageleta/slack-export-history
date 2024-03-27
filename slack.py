@@ -154,7 +154,8 @@ def fetch_message_data(payload, token):
                     'user_name': users[message['user']]['name'] if 'user' in message else message['username'] if 'username' in message else 'UNKNOWN',
                     'text': message['text'],
                     'ts': message['ts'],
-                    'date': datetime.fromtimestamp(float(message['ts'])).strftime('%Y-%m-%d %H:%M:%S')
+                    'date': datetime.fromtimestamp(float(message['ts'])).strftime('%Y-%m-%d %H:%M:%S'),
+                    'replies': fetch_replies(payload, token, message['ts']),
                 })
                 with open(f"chat_{payload['channel']}_({back}-{back + len(data['messages']) - 1}).txt", 'w') as f:
                     json.dump(messages, f, indent=4)
@@ -167,6 +168,34 @@ def fetch_message_data(payload, token):
         traceback.print_exc()
         print(f'Something went wrong. Status code: {r.status_code}')
         sys.exit(1)
+
+def fetch_replies(payload, token, ts):
+    try:
+        payload['ts'] = ts
+        headers = {'Authorization': 'Bearer ' + token, 'Content-type': 'application/x-www-form-urlencoded'}
+        r = requests.post('https://slack.com/api/conversations.replies', data=payload, headers=headers)
+
+        data = r.json()
+        if data['ok']:
+            replies = []
+            for message in data['messages']:
+                # Exclude the original parent message
+                if message['ts'] != ts:
+                    replies.append({
+                        'user_id': message.get('user', 'UNKNOWN'),
+                        'user_name': users.get(message.get('user', ''), {}).get('name', 'UNKNOWN'),
+                        'text': message['text'],
+                        'ts': message['ts'],
+                        'date': datetime.fromtimestamp(float(message['ts'])).strftime('%Y-%m-%d %H:%M:%S')
+                    })
+            return replies
+        else:
+            print(f"Error fetching replies: {data['error']}")
+            return []
+    except Exception as e:
+        print(f'Something went wrong while fetching replies. Exception: {e}')
+        traceback.print_exc()
+        return []
 
 if __name__ == "__main__":
 
